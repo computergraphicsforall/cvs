@@ -4,10 +4,12 @@
             "#3BDF70",
             "#053215"
         ],
+        "cat": 0,
         "end_scale": 1,
         "init_scale": 1,
-        "qcolors": 5,
-        "title": "Datos Nuse"
+        "qcolors": 4,
+        "title": "Datos Nuse",
+        "type_scale": "q"
     },
     "features": [
         {

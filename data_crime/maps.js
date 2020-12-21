@@ -13,6 +13,8 @@
 /**
  * Function that loads the map provided by the Mapbox GL JS API
  */
+
+ var chpColorsMap, chpColorsMapFilter;
 function loadBasicMap () {
     
     mapboxgl.accessToken = token;
@@ -227,12 +229,28 @@ function addLayerChoroplethMap (idLayer, idSource, layout, dataChoropleth, prope
         if (dataValues.length > 0) {
             
             // defining the logarithmic or percentile range for the color scale
-            quantiles = chroma.limits(dataValues, 'q', 4);
-            console.log(quantiles);
+            let qtColorsScale;
+            let qlimits;
+            if (dr.config.cat == 1) {
+                qtColorsScale = ([...new Set(dataValues)].length);
+                qlimits = qtColorsScale - 1;
+                console.log(qtColorsScale)
+
+            }   
+            else {
+                qtColorsScale = dr.config.qcolors;
+                qlimits = qtColorsScale;
+            }
+            
+                
+            quantiles = chroma.limits(dataValues, dr.config.type_scale, qlimits);
+            if (dr.config.cat == 0) {
+                quantiles = quantiles.splice(1);
+            }
+            
             // generating the color scale according to the palette assigned within the dataset
-            colorScale = chroma.scale([dr.config.c_palete[0], dr.config.c_palete[1]]).mode('lch').colors(dr.config.qcolors);
-            console.log(colorScale);
-            //
+            colorScale = chroma.scale([dr.config.c_palete[0], dr.config.c_palete[1]]).mode('lch').colors(qtColorsScale);
+            
             dr.features.forEach(function(item){
     
                 var color = '#f0df0a';
@@ -251,7 +269,7 @@ function addLayerChoroplethMap (idLayer, idSource, layout, dataChoropleth, prope
             });
             // last value is the default, used where there is no data
             chpColorsMap.push('rgba(0,0,0,0)');
-            
+            makeColorFilterChoroplethMap (chpColorsMap, colorScale)
             // If there is no choropleth map with the name of the layer that is trying to create a new one, a new layer of this type is added.
             if (getIdLayer(idLayer) == undefined) {
 
@@ -277,13 +295,13 @@ function addLayerChoroplethMap (idLayer, idSource, layout, dataChoropleth, prope
                 // add opacity change over space units
                 addChangeOpacityOnLayer (idLayer, idSource);
                 
-                addChoropleticLegend(quantiles, colorScale);
+                addChoropleticLegend(quantiles, colorScale, idLayer);
             // otherwise the layer is updated 
             } else {
 
                 setPaintProperty (idLayer, 'fill-color', chpColorsMap);
                 setPaintProperty (idLayer, 'fill-outline-color', "#FFFFFF");
-                addChoropleticLegend (quantiles, colorScale);
+                addChoropleticLegend (quantiles, colorScale, idLayer);
             }
             
         } else {
@@ -297,6 +315,41 @@ function addLayerChoroplethMap (idLayer, idSource, layout, dataChoropleth, prope
     }
 }
 
+function makeColorFilterChoroplethMap (chpColors, colorScale) {
+
+    let colorInactive = '#414141';
+    chpColorsMapFilter = []
+    let indexes = []
+    for (let i = 0; i < colorScale.length; i++) {     
+        
+        chpColorsMapFilter.push([]);
+        chpColorsMapFilter[i].push(chpColors[0], chpColors[1]);
+        indexes.push(i)
+    }
+
+    for (let j = 3; j < chpColors.length; j += 2) {
+        
+        let indexColors = [...indexes];
+        let color = chpColors[j];
+        let indexColor = colorScale.indexOf(color);
+        chpColorsMapFilter[indexColor].push(chpColors[j-1], chpColors[j]);
+        indexColors.splice(indexColor, 1);
+
+        for (let k = 0; k < indexColors.length; k++) {
+
+            let index = indexColors[k];
+            chpColorsMapFilter[index].push(chpColors[j-1], colorInactive);           
+        }     
+    }
+
+    for (let c = 0; c < chpColorsMapFilter.length; c++) {
+        chpColorsMapFilter[c].push('rgba(0,0,0,0)');    
+    }
+
+
+}
+
+//function addExtrusionChoroplethMap (idLayer, )
 function heatMapNuse() {  
 
     map.addLayer({

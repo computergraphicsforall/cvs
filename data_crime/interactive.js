@@ -87,7 +87,7 @@ function addControlToChoroplethProperties (id) {
  * @param {Array} dataQuantiles list of values in a logarithmic range or in percentiles of the choropleth map data
  * @param {Array} colorScale color scale for the choropleth map
  */
-function addChoropleticLegend (dataQuantiles, colorScale) {
+function addChoropleticLegend (dataQuantiles, colorScale, idLayer) {
 
     
     let featuresContainer = _('features');
@@ -148,6 +148,8 @@ function addChoropleticLegend (dataQuantiles, colorScale) {
         
         var item = document.createElement('div');
         item.className = 'div-legend';
+        item.id = i;
+        addLeyendInteractiveColors(idLayer, item);
         
         var key = document.createElement('span');
         key.className = 'legend-key';
@@ -414,4 +416,19 @@ function formatProperties (name) {
     //formatOption = formatOption.replace(/[&\/\\#, +$~%.'":*-?<>{}]/g, ' ');
     formatOption = formatOption.replace(/[^a-zA-Z0-9()]/g, ' '); 
     return formatOption;
+}
+
+function addLeyendInteractiveColors(idLayer, htmlElement) {
+
+    
+    htmlElement.addEventListener('mouseover', function(e) {
+        
+        map.setPaintProperty(idLayer, 'fill-color', chpColorsMapFilter[htmlElement.id]);
+    });
+    htmlElement.addEventListener('mouseleave', function(e) {
+        
+        map.setPaintProperty(idLayer, 'fill-color', chpColorsMap);
+    });
+
+   
 }
